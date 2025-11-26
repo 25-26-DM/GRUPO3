@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Lanceur de Dés</string>
+    <string name="roll">Lancer</string>
+    <string name="one">Un</string>
+    <string name="two">Deux</string>
+    <string name="three">Trois</string>
+    <string name="four">Quatre</string>
+    <string name="five">Cinq</string>
+    <string name="six">Six</string>
+    <string name="rolled_message">Vous avez lancé : %s</string>
+</resources>

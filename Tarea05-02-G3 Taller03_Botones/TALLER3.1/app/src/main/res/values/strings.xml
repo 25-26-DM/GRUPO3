@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Lanzador de Dados</string>
+    <string name="roll">Lanzar</string>
+    <string name="one">Uno</string>
+    <string name="two">Dos</string>
+    <string name="three">Tres</string>
+    <string name="four">Cuatro</string>
+    <string name="five">Cinco</string>
+    <string name="six">Seis</string>
+    <string name="rolled_message">Sacaste: %s</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Citronnade</string>
+    <string name="lemon_select">Appuyez sur le citronnier pour sélectionner un citron</string>
+    <string name="lemon_squeeze">Continuez à appuyer sur le citron pour le presser</string>
+    <string name="lemon_drink">Appuyez sur la citronnade pour la boire</string>
+    <string name="lemon_empty_glass">Appuyez sur le verre vide pour recommencer</string>
+    <string name="lemon_tree_content_description">Citronnier</string>
+    <string name="lemon_content_description">Citron</string>
+    <string name="lemonade_content_description">Verre de citronnade</string>
+    <string name="empty_glass_content_description">Verre vide</string>
+</resources>
