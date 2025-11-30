@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Restauration rapide UCE</string>
+
+    <string name="order_cupcakes">Commander de la restauration rapide</string>
+    <string name="one_cupcake">Une commande</string>
+    <string name="six_cupcakes">Six commandes</string>
+    <string name="twelve_cupcakes">Douze commandes</string>
+
+    <string name="choose_flavor">Choisir un produit</string>
+    <string name="producto_pizza">Pizza</string>
+    <string name="producto_hamburguesa">Hamburger</string>
+    <string name="producto_lasana">Lasagne</string>
+    <string name="producto_salchipapa">Frites</string>
+    <string name="Soda">Café</string>
+    <string name="special_flavor">Combo spécial</string>
+
+    <string name="cancel">Annuler</string>
+    <string name="next">Suivant</string>
+
+    <string name="choose_pickup_date">Choisir la date de retrait</string>
+    <string name="order_summary">Résumé de la commande</string>
+
+    <string name="send">Envoyer la commande à une autre application</string>
+    <string name="quantity">Quantité</string>
+    <string name="flavor">Produit</string>
+    <string name="pickup_date">Date de retrait</string>
+
+    <string name="subtotal_price">Sous-total %s</string>
+    <string name="total_price">Total %s</string>
+
+    <string name="new_cupcake_order">Nouvelle commande de restauration rapide</string>
+
+    <string name="order_details">
+        Quantité: %1$s \n
+        Produit: %2$s \n
+        Date de retrait: %3$s \n
+        Total: %4$s \n\n
+        Merci !
+    </string>
+
+    <string name="back_button">Retour</string>
+
+    <plurals name="cupcakes">
+        <item quantity="one">%d produit</item>
+        <item quantity="other">%d produits</item>
+    </plurals>
+
+</resources>

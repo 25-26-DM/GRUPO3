@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Fast Food UCE</string>
+
+    <string name="order_cupcakes">Order fast food</string>
+    <string name="one_cupcake">One order</string>
+    <string name="six_cupcakes">Six orders</string>
+    <string name="twelve_cupcakes">Twelve orders</string>
+
+    <string name="choose_flavor">Choose product</string>
+    <string name="producto_pizza">Pizza</string>
+    <string name="producto_hamburguesa">Hamburger</string>
+    <string name="producto_lasana">Lasagna</string>
+    <string name="producto_salchipapa">French fries</string>
+    <string name="gaseosa">Soda</string>
+    <string name="special_flavor">Special combo</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="next">Next</string>
+
+    <string name="choose_pickup_date">Choose pickup date</string>
+    <string name="order_summary">Order summary</string>
+
+    <string name="send">Send order to another app</string>
+    <string name="quantity">Quantity</string>
+    <string name="flavor">Product</string>
+    <string name="pickup_date">Pickup date</string>
+
+    <string name="subtotal_price">Subtotal %s</string>
+    <string name="total_price">Total %s</string>
+
+    <string name="new_cupcake_order">New fast food order</string>
+
+    <string name="order_details">
+        Quantity: %1$s \n
+        Product: %2$s \n
+        Pickup date: %3$s \n
+        Total: %4$s \n\n
+        Thank you!
+    </string>
+
+    <string name="back_button">Back</string>
+
+    <plurals name="cupcakes">
+        <item quantity="one">%d product</item>
+        <item quantity="other">%d products</item>
+    </plurals>
+
+</resources>
