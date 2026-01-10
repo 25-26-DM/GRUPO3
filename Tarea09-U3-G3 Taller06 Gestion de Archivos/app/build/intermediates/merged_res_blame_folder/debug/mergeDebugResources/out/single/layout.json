@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "ec.edu.uce.actionopendocument.app-mergeDebugResources-41:/layout/fragment_pdf_renderer_basic.xml",
+        "source": "ec.edu.uce.actionopendocument.app-main-44:/layout/fragment_pdf_renderer_basic.xml"
+    },
+    {
+        "merged": "ec.edu.uce.actionopendocument.app-mergeDebugResources-41:/layout/activity_main_real.xml",
+        "source": "ec.edu.uce.actionopendocument.app-main-44:/layout/activity_main_real.xml"
+    },
+    {
+        "merged": "ec.edu.uce.actionopendocument.app-mergeDebugResources-41:/layout/activity_login.xml",
+        "source": "ec.edu.uce.actionopendocument.app-main-44:/layout/activity_login.xml"
+    }
+]
