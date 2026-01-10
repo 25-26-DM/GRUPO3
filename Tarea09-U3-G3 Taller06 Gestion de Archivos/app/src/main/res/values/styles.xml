@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources>
+
+    <!--
+    =====================================================================================
+    == TEMA PRINCIPAL DE LA APLICACIÓN BASADO EN LOS COLORES DEL LOGO "TECH DROP" ==
+    =====================================================================================
+    -->
+    <style name="Theme.ActionOpenDocument" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <!-- Colores Primarios (afectan botones, barra de acción, etc.) -->
+        <!-- Usamos el ROJO OSCURO del logo -->
+        <item name="colorPrimary">@color/tech_red_dark</item>
+        <item name="colorPrimaryDark">@color/tech_red_dark</item> <!-- Para la barra de estado en versiones antiguas -->
+        <item name="colorOnPrimary">@color/white</item> <!-- Color del texto sobre el color primario -->
+
+        <!-- Color de Acento (afecta controles como campos de texto seleccionados, checkboxes, etc.) -->
+        <!-- Usamos el DORADO del logo -->
+        <item name="colorAccent">@color/tech_gold</item>
+
+        <!-- Color de Fondo de la App -->
+        <item name="android:colorBackground">@color/fondo</item>
+
+        <!-- Color de las superficies (como Cards) -->
+        <item name="colorSurface">@color/tech_charcoal_dark</item>
+
+        <!-- Color del texto sobre los fondos y superficies -->
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+</resources>
