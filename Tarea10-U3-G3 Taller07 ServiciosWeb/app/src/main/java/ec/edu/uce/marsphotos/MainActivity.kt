@@ -1,17 +1,5 @@
 /*
  * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package ec.edu.uce.marsphotos
@@ -30,12 +18,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        // --- CAMBIO 1 (TU ROL): RECIBIR DATOS DEL INTENT ---
+        // Aquí atrapamos lo que nos envía el LoginActivity
+        val usuarioRecibido = intent.getStringExtra("EXTRA_USER") ?: "Usuario Invitado"
+        val horaRecibida = intent.getStringExtra("EXTRA_TIME") ?: ""
+
         setContent {
             MarsPhotosTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    MarsPhotosApp()
+                    // --- CAMBIO 2: PASAR DATOS A LA APP ---
+                    // IMPORTANTE: Esto marcará error en rojo hasta que actualices
+                    // el archivo MarsPhotosApp.kt con el código que te pasé antes.
+                    MarsPhotosApp(
+                        usuario = usuarioRecibido,
+                        hora = horaRecibida
+                    )
                 }
             }
         }

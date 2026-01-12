@@ -17,6 +17,7 @@ import ec.edu.uce.marsphotos.R // Importa R para acceder a tu logo
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String, String) -> Unit, // Función para avisar que entramos
