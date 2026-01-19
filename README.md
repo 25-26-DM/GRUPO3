@@ -31,7 +31,7 @@
     <td>Billy Moreno</td>
   </tr>
   <tr>
-    <td>David Ortega</td>
+    <td>David Ortega Rosero</td>
   </tr>
   <tr>
     <td>Jostyn Palacios</td>
