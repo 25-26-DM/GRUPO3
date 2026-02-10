@@ -31,9 +31,11 @@ import ec.edu.uce.appproductos.model.AppDatabase
 import ec.edu.uce.appproductos.ui.theme.TAREA07U2G3AppProductosTheme
 import kotlinx.coroutines.delay
 
+import androidx.compose.runtime.collectAsState // ASEGÚRATE DE AGREGAR ESTE IMPORT
+import androidx.compose.runtime.getValue
+
 class MainActivity : ComponentActivity() {
 
-    // Detector de inactividad
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         SessionManager.registrarActividad()
         return super.dispatchTouchEvent(ev)
@@ -42,29 +44,45 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Instancias de BD
         val database = AppDatabase.getDatabase(this)
         val productoDao = database.productoDao()
         val usuarioDao = database.usuarioDao()
 
         setContent {
             TAREA07U2G3AppProductosTheme {
-
                 val context = LocalContext.current
+                val navController = rememberNavController()
 
-                // 1. --- SOLICITUD DE PERMISO DE NOTIFICACIONES (Android 13+) ---
+                // Obtenemos el ViewModel
+                val viewModel: ProductoViewModel = viewModel(
+                    factory = ProductoViewModelFactory(application, productoDao, usuarioDao)
+                )
+
+                // ====================================================================================
+                // NUEVO: VIGILANTE DE MENSAJES DE MSGDROP
+                // ====================================================================================
+                val mensajeError by viewModel.errorMsgDrop.collectAsState()
+
+                LaunchedEffect(mensajeError) {
+                    mensajeError?.let { texto ->
+                        // Mostramos el mensaje que vino del servicio web
+                        Toast.makeText(context, texto, Toast.LENGTH_LONG).show()
+                        // Limpiamos el error en el ViewModel para que no se repita al girar la pantalla
+                        viewModel.mensajeMostrado()
+                    }
+                }
+                // ====================================================================================
+
+                // 1. Permisos de Notificaciones
                 val launcher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission(),
                     onResult = { isGranted ->
-                        if (isGranted) {
-                            Toast.makeText(context, "Notificaciones activadas", Toast.LENGTH_SHORT).show()
-                        } else {
+                        if (!isGranted) {
                             Toast.makeText(context, "Sin permiso no verás avisos de sincronización", Toast.LENGTH_LONG).show()
                         }
                     }
                 )
 
-                // Verifica el permiso cada vez que se inicia la pantalla
                 SideEffect {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val permiso = Manifest.permission.POST_NOTIFICATIONS
@@ -73,52 +91,37 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-                // ---------------------------------------------------------------
 
-                val viewModel: ProductoViewModel = viewModel(
-                    factory = ProductoViewModelFactory(application, productoDao, usuarioDao)
-                )
-                val navController = rememberNavController()
-
-                // 2. SINCRONIZACIÓN AL INICIAR
+                // 2. Sincronización al iniciar
                 LaunchedEffect(Unit) {
                     viewModel.sincronizarPendientes()
                 }
 
-                // 3. VIGILANTE DE RED EN TIEMPO REAL
+                // 3. Vigilante de Red
                 DisposableEffect(Unit) {
                     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
                     val networkCallback = object : ConnectivityManager.NetworkCallback() {
                         override fun onAvailable(network: Network) {
                             super.onAvailable(network)
                             viewModel.sincronizarPendientes()
                         }
                     }
-
                     val request = NetworkRequest.Builder()
                         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                         .build()
-
                     connectivityManager.registerNetworkCallback(request, networkCallback)
-
-                    onDispose {
-                        connectivityManager.unregisterNetworkCallback(networkCallback)
-                    }
+                    onDispose { connectivityManager.unregisterNetworkCallback(networkCallback) }
                 }
 
-                // 4. VIGILANTE DE SESIÓN
+                // 4. Vigilante de Sesión
                 LaunchedEffect(Unit) {
                     while (true) {
                         delay(1000)
                         val errorSesion = SessionManager.verificarEstadoSesion()
-
                         if (errorSesion != null) {
                             SessionManager.cerrarSesion()
                             Toast.makeText(applicationContext, errorSesion, Toast.LENGTH_LONG).show()
-                            navController.navigate(Rutas.LOGIN) {
-                                popUpTo(0) { inclusive = true }
-                            }
+                            navController.navigate(Rutas.LOGIN) { popUpTo(0) { inclusive = true } }
                         }
                     }
                 }

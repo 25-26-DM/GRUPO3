@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -39,21 +40,27 @@ class ProductoViewModel(
     // ====================================================================================
     private val dynamoMapper = AwsConfig.getDynamoDBMapper(application)
 
-    // Estado de la lista de productos (La UI observa esto)
+    // Estado de la lista de productos
     val listaProductos: StateFlow<List<Producto>> = productoDao.obtenerTodos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Estado de Carga (Útil para mostrar Spinners en la UI)
+    // Estado de Carga
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // ACTUALIZACIÓN: Estado para el mensaje de error de msgdrop
+    private val _errorMsgDrop = MutableStateFlow<String?>(null)
+    val errorMsgDrop: StateFlow<String?> = _errorMsgDrop.asStateFlow()
+
     init {
-        // Al iniciar la app, intentamos sincronizar y respaldar usuarios
         sincronizarYNotificar()
         subirUsuariosLocales()
     }
 
-    // Helper para verificar conexión
+    fun mensajeMostrado() {
+        _errorMsgDrop.value = null
+    }
+
     private fun hayInternet(): Boolean {
         val cm = getApplication<Application>().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = cm.activeNetwork ?: return false
@@ -65,33 +72,25 @@ class ProductoViewModel(
     // 2. LÓGICA DE SINCRONIZACIÓN (NUBE <-> LOCAL)
     // ====================================================================================
 
-    fun sincronizarPendientes() {
-        sincronizarYNotificar()
-    }
-
-    fun descargarDeNube() {
-        sincronizarYNotificar()
-    }
+    fun sincronizarPendientes() { sincronizarYNotificar() }
+    fun descargarDeNube() { sincronizarYNotificar() }
 
     private fun sincronizarYNotificar() {
         viewModelScope.launch(Dispatchers.IO) {
             if (!hayInternet()) return@launch
-
-            // Indicamos que empezamos a cargar
             _isLoading.value = true
-
             try {
                 // A. SUBIDA (Local -> Nube)
                 val pendientes = productoDao.obtenerNoSincronizados()
                 pendientes.forEach { prod ->
                     try {
                         if (prod.isDeleted) {
-                            dynamoMapper.delete(prod)      // Borrar de Nube
-                            productoDao.eliminar(prod)     // Limpieza Local
+                            dynamoMapper.delete(prod)
+                            productoDao.eliminar(prod)
                         } else {
-                            dynamoMapper.save(prod)        // Subir a Nube
+                            dynamoMapper.save(prod)
                             prod.isSynced = true
-                            productoDao.actualizar(prod)   // Marcar limpio
+                            productoDao.actualizar(prod)
                         }
                     } catch (e: Exception) {
                         Log.e("SYNC", "Error sync item ${prod.codigo}: ${e.message}")
@@ -106,19 +105,15 @@ class ProductoViewModel(
                     productoDao.insertar(prodNube)
                 }
 
-                // C. NOTIFICAR AL USUARIO (Usamos la función auxiliar)
                 actualizarYNotificarTotal()
-
             } catch (e: Exception) {
-                Log.e("SYNC", "Error general en sincronización: ${e.message}")
+                Log.e("SYNC", "Error general: ${e.message}")
             } finally {
-                // Siempre terminamos la carga, haya error o no
                 _isLoading.value = false
             }
         }
     }
 
-    // --- NUEVA FUNCIÓN AUXILIAR PARA EVITAR REPETIR CÓDIGO ---
     private suspend fun actualizarYNotificarTotal() {
         val total = productoDao.contarProductos()
         lanzarNotificacion(total)
@@ -127,86 +122,74 @@ class ProductoViewModel(
     private fun lanzarNotificacion(cantidad: Int) {
         val context = getApplication<Application>()
         val channelId = "sync_channel_high_priority"
-        val notificationId = 1001
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Crear canal para Android 8+ (Oreo)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Sincronización Prioritaria",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notificaciones de estado de sincronización"
-                enableVibration(true)
-            }
+            val channel = NotificationChannel(channelId, "Sincronización", NotificationManager.IMPORTANCE_HIGH)
             notificationManager.createNotificationChannel(channel)
         }
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(android.R.drawable.ic_popup_sync)
             .setContentTitle("Inventario Actualizado")
-            .setContentText("Total productos en base de datos: $cantidad")
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Para Android viejo
-            .setDefaults(NotificationCompat.DEFAULT_ALL)   // Sonido y vibración
+            .setContentText("Total productos: $cantidad")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
 
-        try {
-            notificationManager.notify(notificationId, builder.build())
-        } catch (e: SecurityException) {
-            Log.e("NOTIF", "Permiso denegado para notificaciones.")
-        }
+        notificationManager.notify(1001, builder.build())
     }
 
     // ====================================================================================
-    // 3. CRUD DE PRODUCTOS
+    // 3. CRUD DE PRODUCTOS (CON VALIDACIÓN DE DISPONIBILIDAD)
     // ====================================================================================
 
     fun guardarProducto(producto: Producto) = viewModelScope.launch(Dispatchers.IO) {
-        // 1. Guardar Localmente
+        // Bloqueo de edición si disponibilidad es 0 (false)
+        val existente = productoDao.obtenerPorCodigo(producto.codigo)
+        if (existente != null && !existente.isDisponible) {
+            MsgDropClient.obtenerMensaje { _errorMsgDrop.value = it }
+            return@launch
+        }
+
         producto.isSynced = false
         producto.isDeleted = false
         productoDao.insertar(producto)
 
-        // 2. Intentar Subir (Instantáneo)
         if (hayInternet()) {
             try {
                 dynamoMapper.save(producto)
                 producto.isSynced = true
                 productoDao.actualizar(producto)
-
-                // --- ¡AQUÍ ESTÁ LA MAGIA! Notificamos tras guardar ---
                 actualizarYNotificarTotal()
-
             } catch (e: Exception) {
-                Log.e("AWS", "Fallo subida inmediata: ${e.message}")
+                Log.e("AWS", "Error subida: ${e.message}")
             }
         }
     }
 
     fun eliminarProducto(producto: Producto) = viewModelScope.launch(Dispatchers.IO) {
-        // 1. Soft Delete Local
+        // Bloqueo de eliminación si disponibilidad es 0 (false)
+        if (!producto.isDisponible) {
+            MsgDropClient.obtenerMensaje { _errorMsgDrop.value = it }
+            return@launch
+        }
+
         producto.isDeleted = true
         producto.isSynced = false
         productoDao.actualizar(producto)
 
-        // 2. Intentar Borrar Nube (Instantáneo)
         if (hayInternet()) {
             try {
                 dynamoMapper.delete(producto)
-                productoDao.eliminar(producto) // Si se borró en nube, limpiamos local
-
-                // --- ¡AQUÍ TAMBIÉN! Notificamos tras eliminar ---
+                productoDao.eliminar(producto)
                 actualizarYNotificarTotal()
-
             } catch (e: Exception) {
-                Log.e("AWS", "Fallo eliminado nube: ${e.message}")
+                Log.e("AWS", "Error eliminación: ${e.message}")
             }
         }
     }
 
     suspend fun obtenerProductoPorCodigo(codigo: String) = productoDao.obtenerPorCodigo(codigo)
-
 
     // ====================================================================================
     // 4. GESTIÓN DE USUARIOS
@@ -222,25 +205,16 @@ class ProductoViewModel(
     suspend fun registrarUsuario(nombre: String, pass: String): Boolean {
         return withContext(Dispatchers.IO) {
             if (usuarioDao.buscarPorNombre(nombre) != null) return@withContext false
-
-            val passCifrada = cifrarPass(pass)
-            val nuevo = Usuario(usuario = nombre, clave = passCifrada)
-
-            // Guardar Local
+            val nuevo = Usuario(usuario = nombre, clave = cifrarPass(pass))
             usuarioDao.insertar(nuevo)
-
-            // Guardar Nube (Si hay internet)
-            if (hayInternet()) {
-                try { dynamoMapper.save(nuevo) } catch (e: Exception){ }
-            }
+            if (hayInternet()) { try { dynamoMapper.save(nuevo) } catch (e: Exception){} }
             true
         }
     }
 
     suspend fun login(nombre: String, pass: String): Usuario? {
         return withContext(Dispatchers.IO) {
-            val passCifrada = cifrarPass(pass)
-            usuarioDao.autenticar(nombre, passCifrada)
+            usuarioDao.autenticar(nombre, cifrarPass(pass))
         }
     }
 
@@ -254,29 +228,20 @@ class ProductoViewModel(
     }
 
     // ====================================================================================
-    // 5. VALIDACIONES
+    // 5. VALIDACIONES EXTRAS
     // ====================================================================================
 
     fun esPasswordSegura(password: String): String? {
-        if (password.length < 6) return "La contraseña debe tener al menos 6 caracteres."
-        if (!password.any { it.isDigit() }) return "La contraseña debe incluir al menos un número."
-        if (!password.any { it.isUpperCase() }) return "La contraseña debe incluir al menos una mayúscula."
+        if (password.length < 6) return "Mínimo 6 caracteres."
+        if (!password.any { it.isDigit() }) return "Debe incluir un número."
+        if (!password.any { it.isUpperCase() }) return "Debe incluir una mayúscula."
         return null
     }
 
-    // --- VALIDACIÓN DE USUARIO ---
     fun esUsuarioValido(usuario: String): String? {
-        if (usuario.trim().length < 4) {
-            return "El usuario debe tener al menos 4 caracteres."
-        }
-        if (usuario.contains(" ")) {
-            return "El usuario no puede contener espacios."
-        }
-        // Opcional: Solo letras y números
-        if (!usuario.all { it.isLetterOrDigit() }) {
-            return "Solo use letras y números (sin símbolos)."
-        }
-        return null // Null = Todo correcto
+        if (usuario.trim().length < 4) return "Mínimo 4 caracteres."
+        if (usuario.contains(" ")) return "Sin espacios."
+        return null
     }
 }
 
