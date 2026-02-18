@@ -1,15 +1,25 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
-
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
 android {
+
     namespace = "ec.edu.uce.appproductos"
     compileSdk {
         version = release(36)
     }
+
 
     defaultConfig {
         applicationId = "ec.edu.uce.appproductos"
@@ -19,6 +29,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+
+
+
+        buildConfigField("String", "AWS_ACCESS_KEY_ID", "\"${localProperties.getProperty("aws.access.key")}\"")
+        buildConfigField("String", "AWS_SECRET_ACCESS_KEY", "\"${localProperties.getProperty("aws.secret.key")}\"")
+        buildConfigField("String", "AWS_SESION_TOKEN", "\"${localProperties.getProperty("aws.sesion.token")}\"")
     }
 
     buildTypes {
@@ -39,6 +56,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -55,7 +73,6 @@ android {
         }
     }
 }
-
 
 
 dependencies {
