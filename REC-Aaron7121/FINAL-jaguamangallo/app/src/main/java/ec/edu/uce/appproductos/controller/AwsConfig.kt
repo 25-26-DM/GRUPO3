@@ -14,6 +14,10 @@ import ec.edu.uce.appproductos.BuildConfig
 
 object AwsConfig {
 
+    //AVISO AQUI NO SE CAMBIAN LAS CREDENCIALES : Para evitar errores al momento de sincronizar el git , las credenciales de aws
+    // DEBE CAMBIAR LAS CREDENCIALES EN Local.properties
+
+
     // --- TUS CREDENCIALES DEL LAB ---
     private const val ACCESS_KEY = "ASIA5J4IX3LTOPSATSVZ" // Pega tu Access Key
     private const val SECRET_KEY = "tFspT7v4q9/XxXlR0Jq4pWG2MXjnw55e8sBNWsrF" // Pega tu Secret Key

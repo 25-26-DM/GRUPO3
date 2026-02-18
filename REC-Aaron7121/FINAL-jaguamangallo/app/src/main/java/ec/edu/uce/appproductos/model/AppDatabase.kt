@@ -6,13 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 // IMPORTANTE:
-// 1. Entities: Debe tener [Producto::class, Usuario::class]
-// 2. Version: 3 (Para soportar los cambios de Soft Delete)
-@Database(entities = [Producto::class, Usuario::class], version = 3, exportSchema = false)
+// 1. Entities: Debe tener [Producto::class, Usuario::class, Log::class]
+// 2. Version: 4 (Agregamos tabla de logs)
+@Database(entities = [Producto::class, Usuario::class, Log::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun productoDao(): ProductoDao
     abstract fun usuarioDao(): UsuarioDao
+    abstract fun logDao(): LogDao
 
     companion object {
         @Volatile

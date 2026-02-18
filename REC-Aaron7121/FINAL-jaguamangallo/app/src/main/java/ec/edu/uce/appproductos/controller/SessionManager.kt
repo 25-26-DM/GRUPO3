@@ -10,13 +10,20 @@ object SessionManager {
     var tiempoInicioSesion: Long = 0
     var tiempoUltimaActividad: Long = 0
     var isUsuarioLogueado: Boolean = false
+    var usuarioActual: String = "SISTEMA" // Usuario actual logueado
 
     // Se llama cuando el usuario hace Login exitoso
-    fun iniciarSesion() {
+    fun iniciarSesion(usuario: String = "") {
         val ahora = System.currentTimeMillis()
         tiempoInicioSesion = ahora
         tiempoUltimaActividad = ahora
         isUsuarioLogueado = true
+        usuarioActual = usuario
+    }
+
+    // Obtener usuario actual
+    fun obtenerUsuarioActual(): String {
+        return if (isUsuarioLogueado) usuarioActual else "SISTEMA"
     }
 
     // Se llama cada vez que el usuario toca la pantalla
@@ -31,6 +38,7 @@ object SessionManager {
         isUsuarioLogueado = false
         tiempoInicioSesion = 0
         tiempoUltimaActividad = 0
+        usuarioActual = "SISTEMA"
     }
 
     // Verifica si la sesión sigue válida. Retorna un mensaje de error o null si todo está bien.

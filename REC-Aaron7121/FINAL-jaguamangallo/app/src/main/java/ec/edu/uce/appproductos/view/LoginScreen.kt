@@ -164,7 +164,7 @@ fun LoginScreen(
                         if (usuarioEncontrado != null) {
                             // ÉXITO: Reiniciamos contador y entramos
                             intentosFallidos = 0
-                            SessionManager.iniciarSesion()
+                            SessionManager.iniciarSesion(usuarioEncontrado.usuario)
                             navController.navigate("home/${usuarioEncontrado.usuario}/$password/${usuarioEncontrado.clave}") {
                                 popUpTo(Rutas.LOGIN) { inclusive = true }
                             }

@@ -38,6 +38,7 @@ class ProductoViewModel(
     // 1. CONFIGURACIÓN E INICIALIZACIÓN
     // ====================================================================================
     private val dynamoMapper = AwsConfig.getDynamoDBMapper(application)
+    private val logRec = LogRec(application) // Servicio de logs
 
     // Estado de la lista de productos (La UI observa esto)
     val listaProductos: StateFlow<List<Producto>> = productoDao.obtenerTodos()
@@ -168,7 +169,22 @@ class ProductoViewModel(
         producto.isDeleted = false
         productoDao.insertar(producto)
 
-        // 2. Intentar Subir (Instantáneo)
+        // 2. Registrar Log en DynamoDB
+        try {
+            val usuarioActual = SessionManager.obtenerUsuarioActual()
+            logRec.registrarAccion(
+                accion = LogRec.Accion.CREACION,
+                usuario = usuarioActual,
+                recurso = LogRec.Recurso.PRODUCTO,
+                idRecurso = producto.codigo,
+                detalles = "Producto creado: ${producto.descripcion} - Costo: ${producto.costo}"
+            )
+            logRec.sincronizarLogs() // Sincroniza inmediatamente
+        } catch (e: Exception) {
+            Log.e("LogRec", "Error registrando log de creación: ${e.message}")
+        }
+
+        // 3. Intentar Subir Producto (Instantáneo)
         if (hayInternet()) {
             try {
                 dynamoMapper.save(producto)
@@ -185,12 +201,27 @@ class ProductoViewModel(
     }
 
     fun eliminarProducto(producto: Producto) = viewModelScope.launch(Dispatchers.IO) {
-        // 1. Soft Delete Local
+        // 1. Registrar Log en DynamoDB ANTES de eliminar
+        try {
+            val usuarioActual = SessionManager.obtenerUsuarioActual()
+            logRec.registrarAccion(
+                accion = LogRec.Accion.ELIMINACION,
+                usuario = usuarioActual,
+                recurso = LogRec.Recurso.PRODUCTO,
+                idRecurso = producto.codigo,
+                detalles = "Producto eliminado: ${producto.descripcion}"
+            )
+            logRec.sincronizarLogs() // Sincroniza inmediatamente
+        } catch (e: Exception) {
+            Log.e("LogRec", "Error registrando log de eliminación: ${e.message}")
+        }
+
+        // 2. Soft Delete Local
         producto.isDeleted = true
         producto.isSynced = false
         productoDao.actualizar(producto)
 
-        // 2. Intentar Borrar Nube (Instantáneo)
+        // 3. Intentar Borrar Nube (Instantáneo)
         if (hayInternet()) {
             try {
                 dynamoMapper.delete(producto)
@@ -207,7 +238,42 @@ class ProductoViewModel(
 
     suspend fun obtenerProductoPorCodigo(codigo: String) = productoDao.obtenerPorCodigo(codigo)
 
+    fun actualizarProducto(producto: Producto) = viewModelScope.launch(Dispatchers.IO) {
+        // 1. Registrar Log en DynamoDB
+        try {
+            val usuarioActual = SessionManager.obtenerUsuarioActual()
+            logRec.registrarAccion(
+                accion = LogRec.Accion.ACTUALIZACION,
+                usuario = usuarioActual,
+                recurso = LogRec.Recurso.PRODUCTO,
+                idRecurso = producto.codigo,
+                detalles = "Producto actualizado: ${producto.descripcion} - Costo: ${producto.costo}"
+            )
+            logRec.sincronizarLogs() // Sincroniza inmediatamente
+        } catch (e: Exception) {
+            Log.e("LogRec", "Error registrando log de actualización: ${e.message}")
+        }
 
+        // 2. Actualizar Localmente
+        producto.isSynced = false
+        producto.isDeleted = false
+        productoDao.actualizar(producto)
+
+        // 3. Intentar Subir Cambios (Instantáneo)
+        if (hayInternet()) {
+            try {
+                dynamoMapper.save(producto)
+                producto.isSynced = true
+                productoDao.actualizar(producto)
+
+                // Notificamos tras actualizar
+                actualizarYNotificarTotal()
+
+            } catch (e: Exception) {
+                Log.e("AWS", "Fallo actualización nube: ${e.message}")
+            }
+        }
+    }
     // ====================================================================================
     // 4. GESTIÓN DE USUARIOS
     // ====================================================================================
