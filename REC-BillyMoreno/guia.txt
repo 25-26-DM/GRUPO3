@@ -1,0 +1,15 @@
+git config --global user.name "BillyMoreno"
+
+git config --global user.email "bsmoreno@uce.edu.ec"
+
+git config --global --list
+
+git clone https://github.com/25-26-DM/GRUPO3.git
+
+git status
+
+git add .
+
+git commit -m ""
+
+git push origin main
