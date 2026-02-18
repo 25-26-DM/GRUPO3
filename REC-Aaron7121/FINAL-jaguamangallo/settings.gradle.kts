@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FINAL-jjpalaciosc"
+rootProject.name = "FINAL-jaguamangallo"
 include(":app")
  
