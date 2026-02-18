@@ -33,6 +33,8 @@ import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
+    //COMIT PRUEBA
+
     // Detector de inactividad
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         SessionManager.registrarActividad()
