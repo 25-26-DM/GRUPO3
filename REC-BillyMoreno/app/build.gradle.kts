@@ -59,6 +59,16 @@ android {
 
 
 dependencies {
+
+    // Retrofit para peticiones HTTP
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Para logging de peticiones (opcional pero recomendado para depuración)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

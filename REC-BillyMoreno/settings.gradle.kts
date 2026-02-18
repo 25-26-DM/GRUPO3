@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FINAL-adminda"
+rootProject.name = "REC-BillyMoreno"
 include(":app")
  

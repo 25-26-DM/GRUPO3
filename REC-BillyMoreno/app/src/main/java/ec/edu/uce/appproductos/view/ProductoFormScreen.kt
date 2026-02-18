@@ -53,6 +53,7 @@ import java.util.Objects
 fun ProductoFormScreen(
     navController: NavController,
     idProducto: String?,
+    emailUsuario: String, // <--- NUEVO PARÁMETRO: Email del usuario logueado
     viewModel: ProductoViewModel
 ) {
     val context = LocalContext.current
@@ -107,7 +108,7 @@ fun ProductoFormScreen(
         }
     }
 
-    // 2. CONFIGURACIÓN DE LAUNDERS (Cámara y Crop)
+    // 2. CONFIGURACIÓN DE LAUNCHERS (Cámara y Crop)
 
     // B. Lanzador para el RECORTE (uCrop)
     val cropLauncher = rememberLauncherForActivityResult(contract = CropImageContract()) { uriRecortada ->
@@ -334,7 +335,16 @@ fun ProductoFormScreen(
                         fotoPath = fotoUriFinal?.toString() // Guardamos la ruta final (recortada)
                     )
 
-                    viewModel.guardarProducto(producto)
+                    // --- MODIFICACIÓN: Pasamos el emailUsuario al ViewModel ---
+                    // Verificamos que el email no esté vacío antes de enviar
+                    if (emailUsuario.isNotBlank()) {
+                        viewModel.guardarProducto(producto, emailUsuario)
+                    } else {
+                        // Si no hay email, guardamos sin enviar correo
+                        viewModel.guardarProducto(producto, "")
+                        Toast.makeText(context, "Producto guardado (sin notificación por correo)", Toast.LENGTH_SHORT).show()
+                    }
+
                     Toast.makeText(context, "Producto procesado con éxito", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 },

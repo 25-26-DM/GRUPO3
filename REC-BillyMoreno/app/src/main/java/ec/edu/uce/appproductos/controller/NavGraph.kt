@@ -10,17 +10,16 @@ import ec.edu.uce.appproductos.view.HomeScreen
 import ec.edu.uce.appproductos.view.LoginScreen
 import ec.edu.uce.appproductos.view.ProductoFormScreen
 import ec.edu.uce.appproductos.view.RegistroScreen
-import ec.edu.uce.appproductos.view.SplashScreen // <--- Asegúrate de importar esto
+import ec.edu.uce.appproductos.view.SplashScreen
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     viewModel: ProductoViewModel
 ) {
-    // CAMBIO CLAVE: startDestination ahora es Rutas.SPLASH para que inicie con la animación
     NavHost(navController = navController, startDestination = Rutas.SPLASH) {
 
-        // 1. RUTA SPLASH (NUEVA - Pantalla de carga animada)
+        // 1. RUTA SPLASH
         composable(Rutas.SPLASH) {
             SplashScreen(navController)
         }
@@ -51,13 +50,24 @@ fun AppNavigation(
             HomeScreen(navController, nombre, pass, hash, viewModel)
         }
 
-        // 5. RUTA FORMULARIO (Crear o Editar producto)
+        // 5. RUTA FORMULARIO (Crear o Editar producto) - CORREGIDA
         composable(
-            route = "formulario_producto/{idProducto}",
-            arguments = listOf(navArgument("idProducto") { type = NavType.StringType })
+            route = "formulario_producto/{idProducto}/{emailUsuario}",
+            arguments = listOf(
+                navArgument("idProducto") { type = NavType.StringType },
+                navArgument("emailUsuario") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("idProducto")
-            ProductoFormScreen(navController, id, viewModel)
+            val emailUsuario = backStackEntry.arguments?.getString("emailUsuario") ?: ""
+
+            // ORDEN CORRECTO: (navController, idProducto, emailUsuario, viewModel)
+            ProductoFormScreen(
+                navController = navController,
+                idProducto = id,
+                emailUsuario = emailUsuario,
+                viewModel = viewModel
+            )
         }
     }
 }

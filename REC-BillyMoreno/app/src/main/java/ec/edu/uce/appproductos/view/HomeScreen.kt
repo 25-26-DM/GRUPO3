@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import ec.edu.uce.appproductos.controller.ProductoViewModel
+import ec.edu.uce.appproductos.controller.ProductoViewModel  // <--- IMPORTA el ViewModel
 import ec.edu.uce.appproductos.controller.Rutas
 import ec.edu.uce.appproductos.controller.SessionManager
 import ec.edu.uce.appproductos.model.Producto
@@ -42,11 +42,11 @@ fun HomeScreen(
     nombreUsuario: String,
     pass: String, // Se mantienen por compatibilidad con la navegación
     hash: String,
-    viewModel: ProductoViewModel
+    viewModel: ProductoViewModel  // <--- Usa el importado, no redeclara
 ) {
     // 1. OBSERVAMOS DATOS Y ESTADOS
     val listaProductos by viewModel.listaProductos.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState() // <--- ¡Nuevo estado de carga!
+    val isLoading by viewModel.isLoading.collectAsState()
 
     var mostrarDialogoBorrar by remember { mutableStateOf(false) }
     var productoAEliminar by remember { mutableStateOf<Producto?>(null) }
@@ -88,7 +88,10 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("formulario_producto/nuevo") },
+                onClick = {
+                    // Pasamos el email del usuario (asumiendo que nombreUsuario es el email)
+                    navController.navigate("formulario_producto/nuevo/$nombreUsuario")
+                },
                 containerColor = Color(0xFFFF9800),
                 contentColor = Color.White
             ) {
@@ -132,7 +135,7 @@ fun HomeScreen(
                 if (listaProductos.isEmpty() && !isLoading) {
                     // CASO A: EMPTY STATE (Lista vacía)
                     Column(
-                        modifier = Modifier.fillMaxSize().padding(bottom = 80.dp), // Padding para no chocar con el FAB
+                        modifier = Modifier.fillMaxSize().padding(bottom = 80.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -154,7 +157,7 @@ fun HomeScreen(
                         items(listaProductos) { producto ->
                             ItemProductoCompleto(
                                 producto = producto,
-                                onEditClick = { navController.navigate("formulario_producto/${producto.codigo}") },
+                                onEditClick = { navController.navigate("formulario_producto/${producto.codigo}/$nombreUsuario") },
                                 onDeleteClick = {
                                     productoAEliminar = producto
                                     mostrarDialogoBorrar = true
@@ -170,7 +173,7 @@ fun HomeScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)), // Fondo oscurecido
+                        .background(Color.Black.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = Color(0xFFFF9800))
@@ -275,15 +278,15 @@ fun ItemProductoCompleto(
                         text = "$${producto.costo}",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
-                        color = Color(0xFF2E7D32) // Verde oscuro dinero
+                        color = Color(0xFF2E7D32)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
 
                     // Chip de estado pequeño
                     val (colorFondo, textoEstado) = if (producto.isDisponible) {
-                        Pair(Color(0xFFE8F5E9), "Disponible") // Verde claro
+                        Pair(Color(0xFFE8F5E9), "Disponible")
                     } else {
-                        Pair(Color(0xFFFFEBEE), "Agotado") // Rojo claro
+                        Pair(Color(0xFFFFEBEE), "Agotado")
                     }
 
                     Surface(

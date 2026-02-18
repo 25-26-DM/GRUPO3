@@ -162,7 +162,8 @@ class ProductoViewModel(
     // 3. CRUD DE PRODUCTOS
     // ====================================================================================
 
-    fun guardarProducto(producto: Producto) = viewModelScope.launch(Dispatchers.IO) {
+    // En ProductoViewModel.kt - Modifica esta función:
+    fun guardarProducto(producto: Producto, emailUsuario: String = "") = viewModelScope.launch(Dispatchers.IO) {
         // 1. Guardar Localmente
         producto.isSynced = false
         producto.isDeleted = false
@@ -174,6 +175,14 @@ class ProductoViewModel(
                 dynamoMapper.save(producto)
                 producto.isSynced = true
                 productoDao.actualizar(producto)
+
+                // --- ENVÍO DE CORREO (SOLO PARA PRODUCTOS NUEVOS) ---
+                // Verificamos que el producto no existía antes (es nuevo)
+                // y que tenemos un email válido
+                if (emailUsuario.isNotBlank() && producto.isSynced) {
+                    // Llamamos al servicio de email
+                    EmailService.notificarNuevoProducto(emailUsuario, producto)
+                }
 
                 // --- ¡AQUÍ ESTÁ LA MAGIA! Notificamos tras guardar ---
                 actualizarYNotificarTotal()
@@ -280,7 +289,7 @@ class ProductoViewModel(
     }
 }
 
-// FACTORY
+// FACTORY - ESTA ES LA ÚNICA CLASE ADICIONAL QUE DEBE EXISTIR
 class ProductoViewModelFactory(
     private val application: Application,
     private val productoDao: ProductoDao,

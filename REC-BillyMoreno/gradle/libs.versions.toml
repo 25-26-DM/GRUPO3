@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.2"
+agp = "8.12.0"
 awsAndroidSdkCore = "2.67.0"
 awsAndroidSdkDdb = "2.67.0"
 awsAndroidSdkDdbMapper = "2.67.0"
